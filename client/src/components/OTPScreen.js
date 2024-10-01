@@ -6,6 +6,11 @@ const OTPScreen = () => {
   const [otp, setOtp] = useState('');
   const navigation = useNavigation();
 
+  const handleSubmit = () => {
+    // Navigate to SelectGender screen regardless of OTP entered
+    navigation.navigate('SelectGender');
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -25,7 +30,7 @@ const OTPScreen = () => {
         onChangeText={setOtp}
         keyboardType="number-pad"
       />
-      <TouchableOpacity style={styles.submitButton}>
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Submit</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.resendButton}>
@@ -34,8 +39,6 @@ const OTPScreen = () => {
     </View>
   );
 };
-
-// ... styles remain the same
 
 const styles = StyleSheet.create({
   container: {

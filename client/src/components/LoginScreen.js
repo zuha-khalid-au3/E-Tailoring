@@ -7,6 +7,15 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
 
+  const handleSignIn = () => {
+    // Implement sign in logic here
+    console.log('Sign in with:', email, password);
+  };
+
+  const handleRequestOTP = () => {
+    navigation.navigate('OTP');
+  };
+
   return (
     <ImageBackground
       source={{ uri: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' }}
@@ -29,21 +38,16 @@ const LoginScreen = () => {
           onChangeText={setPassword}
           secureTextEntry
         />
-        <TouchableOpacity style={styles.signInButton}>
+        <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.requestOTPButton}
-          onPress={() => navigation.navigate('OTPScreen')}
-        >
+        <TouchableOpacity style={styles.requestOTPButton} onPress={handleRequestOTP}>
           <Text style={styles.requestOTPText}>Request OTP</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
   );
 };
-
-// ... styles remain the same
 
 const styles = StyleSheet.create({
   background: {
