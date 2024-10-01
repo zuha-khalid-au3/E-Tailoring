@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Camera } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 
-const CameraScreen = () => {
+export default function CameraScreen() {
   const [hasPermission, setHasPermission] = useState(null);
+  const [type, setType] = useState('back');
+  const cameraRef = useRef(null);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -21,47 +23,65 @@ const CameraScreen = () => {
     return <Text>No access to camera</Text>;
   }
 
+  const toggleCameraType = () => {
+    setType(current => (current === 'back' ? 'front' : 'back'));
+  };
+
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync();
+        console.log(photo);
+        // Handle the captured photo here
+      } catch (error) {
+        console.error('Error taking picture:', error);
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Image
-        source={{ uri: 'https://via.placeholder.com/400x600.png?text=Camera+Preview' }}
-        style={styles.cameraPreview}
-      />
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-          <Text>Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <Text>Capture</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <Text>Gallery</Text>
-        </TouchableOpacity>
-      </View>
+      <Camera style={styles.camera} type={type} ref={cameraRef}>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
+            <Text style={styles.text}>Flip</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={takePicture}>
+            <Text style={styles.text}>Take Photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+            <Text style={styles.text}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      </Camera>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  cameraPreview: {
+  camera: {
     flex: 1,
   },
   buttonContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 20,
-    width: '100%',
+    margin: 20,
   },
   button: {
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 30,
+    flex: 0.1,
+    alignSelf: 'flex-end',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  text: {
+    fontSize: 18,
+    color: 'white',
   },
 });
-
-export default CameraScreen;
