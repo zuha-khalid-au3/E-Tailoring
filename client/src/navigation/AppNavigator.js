@@ -7,6 +7,7 @@ import SelectGenderScreen from '../components/SelectGenderScreen';
 import CameraScreen from '../components/CameraScreen';
 import SelectShirtScreen from '../components/SelectShirtScreen';
 import SelectPantScreen from '../components/SelectPantScreen';
+import ClothingSelectionScreen from '../components/ClothingSelectionScreen';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,7 @@ const AppNavigator = () => {
       <Stack.Screen name="OTP" component={OTPScreen} />
       <Stack.Screen name="SelectGender" component={SelectGenderScreen} />
       <Stack.Screen name="Camera" component={CameraScreen} />
+      <Stack.Screen name="ClothingSelectionScreen" component={ClothingSelectionScreen} />
       <Stack.Screen name="SelectShirt" component={SelectShirtScreen} />
       <Stack.Screen name="SelectPant" component={SelectPantScreen} />
     </Stack.Navigator>

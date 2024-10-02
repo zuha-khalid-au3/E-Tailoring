@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import Webcam from 'react-webcam';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +16,35 @@ export default function CameraScreen() {
     }
   }, []);
 
+  const confirmAndNavigate = (photo) => {
+    Alert.alert(
+      "Confirm Photo",
+      "Do you wish to proceed with this photo?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "OK", 
+          onPress: () => navigation.navigate('ClothingSelectionScreen', { photo })
+        }
+      ]
+    );
+  };
+
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync();
+        console.log(photo);
+        confirmAndNavigate(photo);
+      } catch (error) {
+        console.error('Error taking picture:', error);
+      }
+    }
+  };
+
   if (Platform.OS === 'web') {
     return (
       <View style={styles.container}>
@@ -29,6 +58,7 @@ export default function CameraScreen() {
           <TouchableOpacity style={styles.button} onPress={() => {
             const screenshot = cameraRef.current.getScreenshot();
             console.log(screenshot);
+            confirmAndNavigate({ uri: screenshot });
           }}>
             <Text style={styles.text}>Take Photo</Text>
           </TouchableOpacity>
@@ -50,17 +80,6 @@ export default function CameraScreen() {
       </View>
     );
   }
-
-  const takePicture = async () => {
-    if (cameraRef.current) {
-      try {
-        const photo = await cameraRef.current.takePictureAsync();
-        console.log(photo);
-      } catch (error) {
-        console.error('Error taking picture:', error);
-      }
-    }
-  };
 
   return (
     <View style={styles.container}>
