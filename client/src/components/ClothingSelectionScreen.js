@@ -1,55 +1,131 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useSelector, useDispatch } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
+import { clothingData, sizes, basePrice } from '../mockData';
+import { setSelectedOption, updateAmount } from '../redux/store';
 
-const ClothingSelectionScreen = ({ type, imageUrl }) => {
+const customizationOptions = Object.keys(clothingData);
+
+const ClothingSelectionScreen = ({ route, type }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const navigation = useNavigation();
+  const [activeOption, setActiveOption] = useState('fabric');
+  const dispatch = useDispatch();
+  const { capturedImage, selectedOptions, amount } = useSelector((state) => state.clothing);
 
-  const options = ['Fabric', 'Color', 'Button', 'Thread', 'Collar', 'Cuffs'];
-  const sizes = ['S', 'M', 'L', 'XL'];
+  const clothingType = route?.params?.type || type;
+
+  const calculateTotalPrice = useCallback(() => {
+    let total = basePrice;
+    Object.entries(selectedOptions).forEach(([option, value]) => {
+      const selectedItem = clothingData[option].find(item => item.name === value);
+      if (selectedItem) {
+        total += selectedItem.price;
+      }
+    });
+    return total;
+  }, [selectedOptions]);
+
+  useEffect(() => {
+    const newAmount = calculateTotalPrice();
+    dispatch(updateAmount(newAmount));
+  }, [selectedOptions, dispatch, calculateTotalPrice]);
+
+  const handleOptionPress = useCallback((option) => {
+    setActiveOption(option);
+  }, []);
+
+  const handleSelectionPress = useCallback((option, value) => {
+    dispatch(setSelectedOption({ option, value }));
+  }, [dispatch]);
+
+  const renderHorizontalOptions = () => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+      {clothingData[activeOption].map((item, index) => (
+        <TouchableOpacity
+          key={index}
+          style={[
+            styles.horizontalOption,
+            selectedOptions[activeOption] === item.name && styles.selectedOption
+          ]}
+          onPress={() => handleSelectionPress(activeOption, item.name)}
+        >
+          <Text style={styles.horizontalOptionText}>{item.name}</Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{type}</Text>
-        <TouchableOpacity style={styles.cartButton}>
-          <Text style={styles.cartButtonText}>🛒</Text>
+        <Ionicons name="menu-outline" size={24} color="#8e8e93" />
+        <Text style={styles.title}>{clothingType}</Text>
+        <Ionicons name="cart-outline" size={24} color="#ff3b30" />
+      </View>
+      
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={20} color="#8e8e93" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+      
+      <View style={styles.contentContainer}>
+        <Image source={{ uri: capturedImage }} style={styles.clothingImage} />
+        <View style={styles.optionsContainer}>
+          {customizationOptions.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.optionButton,
+                activeOption === option && styles.activeOption
+              ]}
+              onPress={() => handleOptionPress(option)}
+            >
+              <Text style={[
+                styles.optionButtonText,
+                activeOption === option && styles.activeOptionText
+              ]}>{option}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+      
+      <View style={styles.carouselContainer}>
+        <TouchableOpacity>
+          <Ionicons name="chevron-back" size={24} color="#8e8e93" />
+        </TouchableOpacity>
+        {renderHorizontalOptions()}
+        <TouchableOpacity>
+          <Ionicons name="chevron-forward" size={24} color="#8e8e93" />
         </TouchableOpacity>
       </View>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="🔍 Search"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-      <Image source={{ uri: imageUrl }} style={styles.clothingImage} />
-      <View style={styles.optionsContainer}>
-        {options.map((option, index) => (
-          <TouchableOpacity key={index} style={styles.optionButton}>
-            <Text style={styles.optionButtonText}>{option}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      
       <View style={styles.brandContainer}>
-        <Image 
-          source={{ uri: 'https://via.placeholder.com/50x50/FF0000/FFFFFF?text=R' }} 
-          style={styles.brandLogo} 
-        />
-        <Text style={styles.brandName}>Raymond</Text>
+        <Text style={styles.brandLabel}>Brand chosen</Text>
+        <View style={styles.selectedBrandContainer}>
+          <View style={styles.brandLogo} />
+          <Text style={styles.brandName}>Raymond</Text>
+        </View>
       </View>
-      <View style={styles.sizesContainer}>
-        {sizes.map((size, index) => (
-          <TouchableOpacity key={index} style={styles.sizeButton}>
-            <Text style={styles.sizeButtonText}>{size}</Text>
+      
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.brandScroll}>
+        {['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5'].map((brand, index) => (
+          <TouchableOpacity key={index} style={styles.brandButton}>
+            <Text style={styles.brandButtonText}>{brand}</Text>
           </TouchableOpacity>
         ))}
+      </ScrollView>
+      
+      <View style={styles.amountContainer}>
+        <Text style={styles.amountLabel}>Amount</Text>
+        <Text style={styles.amountValue}>₹ {amount.toLocaleString()}</Text>
       </View>
-      <View style={styles.priceContainer}>
-        <Text style={styles.priceLabel}>Amount</Text>
-        <Text style={styles.priceValue}>₹ 1,900</Text>
-      </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -63,89 +139,122 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 15,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
   },
-  cartButton: {
-    padding: 10,
-  },
-  cartButtonText: {
-    fontSize: 24,
-  },
-  searchInput: {
-    backgroundColor: '#F0F0F0',
-    borderRadius: 20,
-    padding: 10,
-    marginBottom: 20,
-  },
-  clothingImage: {
-    width: '100%',
-    height: 300,
-    resizeMode: 'cover',
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  optionButton: {
-    backgroundColor: '#F0F0F0',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    marginBottom: 10,
-  },
-  optionButtonText: {
-    color: '#8B5CF6',
-  },
-  brandContainer: {
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: '#f2f2f7',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 10,
+    marginLeft: 10,
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    marginBottom: 15,
+  },
+  clothingImage: {
+    width: '75%',
+    aspectRatio: 3/4,
+    borderRadius: 10,
+  },
+  optionsContainer: {
+    width: '25%',
+    paddingLeft: 10,
+  },
+  optionButton: {
+    paddingVertical: 10,
+  },
+  optionButtonText: {
+    color: '#8e8e93',
+  },
+  activeOption: {
+    backgroundColor: '#f2f2f7',
+    borderRadius: 5,
+  },
+  activeOptionText: {
+    color: '#5856d6',
+  },
+  carouselContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  horizontalScroll: {
+    flex: 1,
+  },
+  horizontalOption: {
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    marginRight: 10,
+    backgroundColor: '#f2f2f7',
+    borderRadius: 15,
+  },
+  selectedOption: {
+    backgroundColor: '#5856d6',
+  },
+  horizontalOptionText: {
+    color: '#8e8e93',
+  },
+  brandContainer: {
+    marginBottom: 10,
+  },
+  brandLabel: {
+    fontSize: 16,
+    color: '#8e8e93',
+    marginBottom: 5,
+  },
+  selectedBrandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f7',
+    padding: 10,
+    borderRadius: 5,
   },
   brandLogo: {
-    width: 50,
-    height: 50,
+    width: 20,
+    height: 20,
+    backgroundColor: 'red',
     marginRight: 10,
   },
   brandName: {
-    fontSize: 18,
     fontWeight: 'bold',
   },
-  sizesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
+  brandScroll: {
+    marginBottom: 15,
   },
-  sizeButton: {
-    borderWidth: 1,
-    borderColor: '#8B5CF6',
-    paddingVertical: 5,
+  brandButton: {
     paddingHorizontal: 15,
-    borderRadius: 5,
+    paddingVertical: 5,
+    marginRight: 10,
+    backgroundColor: '#f2f2f7',
+    borderRadius: 15,
   },
-  sizeButtonText: {
-    color: '#8B5CF6',
+  brandButtonText: {
+    color: '#5856d6',
   },
-  priceContainer: {
+  amountContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  priceLabel: {
+  amountLabel: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-  priceValue: {
+  amountValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#8B5CF6',
+    color: '#5856d6',
   },
 });
 

@@ -3,12 +3,15 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import Webcam from 'react-webcam';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { setCapturedImage } from '../redux/store';
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [type, setType] = useState('back');
   const cameraRef = useRef(null);
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
@@ -16,7 +19,7 @@ export default function CameraScreen() {
     }
   }, []);
 
-  const confirmAndNavigate = (photo) => {
+    const confirmAndNavigate = (photo) => {
     Alert.alert(
       "Confirm Photo",
       "Do you wish to proceed with this photo?",
@@ -27,7 +30,10 @@ export default function CameraScreen() {
         },
         { 
           text: "OK", 
-          onPress: () => navigation.navigate('ClothingSelectionScreen', { photo })
+          onPress: () => {
+            dispatch(setCapturedImage(photo.uri));
+            navigation.navigate('SelectShirt');
+          }
         }
       ]
     );

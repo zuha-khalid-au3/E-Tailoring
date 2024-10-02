@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { setSelectedType } from '../redux/store';
 import ClothingSelectionScreen from './ClothingSelectionScreen';
 
-const SelectPantScreen = () => {
-  return (
-    <ClothingSelectionScreen
-      type="Bottom Wear"
-      imageUrl="https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-    />
-  );
+const SelectPantScreen = ({ navigation, route }) => {
+  const dispatch = useDispatch();
+  
+  useEffect(() => {
+    dispatch(setSelectedType('Bottom Wear'));
+  }, [dispatch]);
+
+  return <ClothingSelectionScreen type="Bottom Wear" route={route} />;
 };
 
 export default SelectPantScreen;
