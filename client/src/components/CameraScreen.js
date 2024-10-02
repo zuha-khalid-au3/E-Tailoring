@@ -1,23 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Camera } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import Webcam from 'react-webcam';
 import { useNavigation } from '@react-navigation/native';
 
 export default function CameraScreen() {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [type, setType] = useState(Camera?.Constants?.Type?.back || 'back');
+  const [permission, requestPermission] = useCameraPermissions();
+  const [type, setType] = useState('back');
   const cameraRef = useRef(null);
   const navigation = useNavigation();
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      setHasPermission(true);
-    } else {
-      (async () => {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        setHasPermission(status === 'granted');
-      })();
+    if (Platform.OS !== 'web') {
+      requestPermission();
     }
   }, []);
 
@@ -45,11 +40,15 @@ export default function CameraScreen() {
     );
   }
 
-  if (hasPermission === null) {
-    return <View />;
-  }
-  if (hasPermission === false) {
-    return <Text>No access to camera</Text>;
+  if (!permission || !permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text>Camera permission is required</Text>
+        <TouchableOpacity style={styles.button} onPress={requestPermission}>
+          <Text style={styles.text}>Grant Permission</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   const takePicture = async () => {
@@ -65,7 +64,11 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <Camera style={styles.camera} type={type} ref={cameraRef}>
+      <CameraView
+        style={styles.camera}
+        type={type}
+        ref={cameraRef}
+      >
         <View style={styles.overlay}>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={takePicture}>
@@ -76,7 +79,7 @@ export default function CameraScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </Camera>
+      </CameraView>
     </View>
   );
 }
@@ -91,7 +94,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'transparent',
-    justifyContent: 'flex-end', // Align buttons to the bottom
+    justifyContent: 'flex-end',
   },
   buttonContainer: {
     flexDirection: 'row',
